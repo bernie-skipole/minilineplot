@@ -6,7 +6,7 @@ The chart has a left vertical axis and a bottom horizontal axis, grid lines are 
 
 Two classes are defined.
 
-**Line**, containg x,y points which creates a line to be plotted 
+**Line**, containing x,y points which creates a line to be plotted 
 
 **Axis** which creates the axis, and to which Line objects can be added.
 
@@ -81,13 +81,17 @@ The y axis is always just numbers
 
 *yintervals* default 5, the interval spacing of values along the y axis, 5 would be five intervals and six values.
 
-*title* default "", string printed at the top of the chart
+*title* default "", A string printed at the top of the chart
 
-*description* default "" string printed at the bottom of the chart
+*description* default "", A string printed at the bottom of the chart
 
-*verticalgrid* default 1, 0 is no vertical grid lines, 1 is a line for every x axis interval, 2 is a line for every second interval.
+*verticalgrid* default 1
 
-*horzontalgrid* default 1, 0 is no horizontal grid lines, 1 is a line for every y axis interval, 2 is a line for every second interval.
+0 is no vertical grid lines, 1 is a line for every x axis interval, 2 is a line for every second interval etc.,
+
+*horzontalgrid* default 1
+
+0 is no horizontal grid lines, 1 is a line for every y axis interval, 2 is a line for every second interval etc.,
 
 The following colors are SVG colors, using standard strings
 
