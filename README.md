@@ -57,40 +57,49 @@ Arguments
 
 *imagewidth*  default 800
 
-*imageheight* def:int = 600
+*imageheight* default 600
 
-    xstrings:list[str] = field(default_factory=list)   # A list of strings used as the x axis values, use for text values such as months, etc.,
-                                                       # If any strings are set here, the following xaxis numbers are ignored
+*xstrings* A list of strings used as the x axis values, use for text values such as months, etc.,
 
-    #### or use numbers for the x axis ####
+If any strings are set in xstrings, the following xaxis numbers are ignored
 
-    xformat:str = ".2f"            # How the x axis numbers are formatted,
-    xmin:float|int = 0             # minimum x value
-    xmax:float|int = 10            # maximum x value
-    xintervals:int = 5             # interval spacing of values along the x axis, 5 would be five intervals and six values.
+*xformat* default string ".2f" Sets how the x axis numbers are formatted.
 
-    # The y axis is always just numbers
+*xmin* default 0, the minimum x value
 
-    yformat:str = ".2f"            # How the y axis numbers are formatted,
-    ymin:float|int = 0             # minimum y value
-    ymax:float|int = 10            # maximum y value
-    yintervals:int = 5             # interval spacing of values up the y axis, 5 would be five intervals and six values.
+*xmax* default 10, the maximum x value
 
+*xintervals* default 5, the interval spacing of values along the x axis, 5 would be five intervals and six values.
 
-    title:str = ""                 # printed at the top of the chart
-    description:str = ""           # printed at the bottom of the chart
+The y axis is always just numbers
 
-    verticalgrid:int = 1           # 0 is no vertical grid lines, 1 is a line for every x axis interval, 2 is a line for every second interval.
-    horzontalgrid:int = 1          # 0 is no horizontal grid lines, 1 is a line for every y axis interval, 2 is a line for every second interval.
+*yformat* default string ".2f" Sets how the y axis numbers are formatted.
 
-    # The following colors are SVG colors, using standard strings
+*ymin* default 0, the minimum y value
 
-    gridcol:str="grey"             # Color of the chart grid
-    axiscol:str="black"            # Color of axis, title and description
-    chartbackcol:str="white"       # the background colour of the chart
-    backcol:str="white"            # The background colour of the whole image
+*ymax* default 10, the maximum y value
 
+*yintervals* default 5, the interval spacing of values along the y axis, 5 would be five intervals and six values.
 
-    # xformat and yformat is a format string describing how numbers are printed
-    # for example the string ".2f"   gives a number to two decimal places
+*title* default "", string printed at the top of the chart
+
+*description* default "" string printed at the bottom of the chart
+
+*verticalgrid* default 1, 0 is no vertical grid lines, 1 is a line for every x axis interval, 2 is a line for every second interval.
+
+*horzontalgrid* default 1, 0 is no horizontal grid lines, 1 is a line for every y axis interval, 2 is a line for every second interval.
+
+The following colors are SVG colors, using standard strings
+
+*gridcol* default "grey" Color of the chart grid
+
+*axiscol* default "black" Color of axis, title and description
+
+*chartbackcol* default "white" the background colour of the chart
+
+*backcol* default "white" The background colour of the whole image
+
+xformat and yformat is a format string describing how numbers are printed.
+
+for example the string ".2f"   gives a number to two decimal places
 
