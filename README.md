@@ -117,5 +117,8 @@ Save the plot to an svg image file
 
 To install, simply copy minilineplot.py to your own project files, or just cut and paste the contents. The code is public domain.
 
-Note, to keep things simple there is no data validation, so lines with values outside the axis will not be caught, it is rubbish in = rubbish out 
+Note, to keep things simple there is no data validation, so lines with values outside the axis will not be caught, it is rubbish in = rubbish out.
+
+![Test image](https://github.com/bernie-skipole/minilineplot/blob/main/test.svg)
+
 
