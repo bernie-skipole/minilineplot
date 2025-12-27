@@ -99,21 +99,23 @@ The following colors are SVG colors, using standard strings
 
 *backcol* default "white" The background colour of the whole image
 
-xformat and yformat is a format string describing how numbers are printed.
-
-for example the string ".2f"   gives a number to two decimal places
+xformat and yformat are strings describing how numbers are printed, for example the string ".2f" gives a number to two decimal places
 
 Methods
 
-to_string(xml_declaration = False)
+*to_string(xml_declaration = False)*
 
 Return a string SVG object. If xml_declaration is True, an xml tag will be included in the returned string which is usually required when creating an svg image file but not required if embedding the code directly into an html document,
 
-to_bytes(xml_declaration = True)
+*to_bytes(xml_declaration = True)*
 
 Return a bytes SVG object.
 
-to_file(filepath)
+*to_file(filepath)*
 
 Save the plot to an svg image file
+
+To install, simply copy minilineplot.py to your own project files, or just cut and paste the contents. The code is public domain.
+
+Note, to keep things simple there is no data validation, so lines with values outside the axis will not be caught, it is rubbish in = rubbish out 
 
