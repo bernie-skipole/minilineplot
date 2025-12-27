@@ -53,7 +53,7 @@ Arguments
 
 *lines* list of Line objects
 
-*fontsize"  default 24
+*fontsize*  default 24
 
 *imagewidth*  default 800
 
