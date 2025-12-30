@@ -119,7 +119,7 @@ Return a bytes SVG object.
 
 Save the plot to an svg image file
 
-To install, simply copy minilineplot.py to your own project files, or just cut and paste the contents. The code is public domain.
+To install, either use Pypi, or simply copy minilineplot.py to your own project files, or just cut and paste the contents. The code is public domain.
 
 Note, to keep things simple there is no data validation, so lines with values outside the axis will not be caught, it is rubbish in = rubbish out.
 
