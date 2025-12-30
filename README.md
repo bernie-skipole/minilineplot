@@ -61,7 +61,7 @@ Arguments
 
 *xstrings* A list of strings used as the x axis values, use for text values such as months, etc.,
 
-If any strings are set in xstrings, the following xaxis numbers are ignored
+Alternatively, the above argument can be left empty and the following x axis values set instead.
 
 *xformat* default string ".2f" Sets how the x axis numbers are formatted.
 
@@ -70,6 +70,8 @@ If any strings are set in xstrings, the following xaxis numbers are ignored
 *xmax* default 10, the maximum x value
 
 *xintervals* default 5, the interval spacing of values along the x axis, 5 would be five intervals and six values.
+
+If any strings are set in xstrings, the above numbers are ignored
 
 The y axis is always just numbers
 
@@ -103,7 +105,9 @@ The following colors are SVG colors, using standard strings
 
 *backcol* default "white" The background colour of the whole image
 
-xformat and yformat are strings describing how numbers are printed, for example the string ".2f" gives a number to two decimal places
+xformat and yformat are strings describing how numbers are printed, for example the string ".2f" gives a number to two decimal places.
+
+If chart text starts overlapping, either decrease font size, or increase the image size while keeping fontsize the same.
 
 Methods
 
@@ -123,6 +127,6 @@ To install, either use Pypi, or simply copy minilineplot.py to your own project 
 
 Note, to keep things simple there is no data validation, so lines with values outside the axis will not be caught, it is rubbish in = rubbish out.
 
-![Test image](https://github.com/bernie-skipole/minilineplot/blob/main/test.svg)
+![Test image](https://raw.githubusercontent.com/bernie-skipole/minilineplot/main/test.svg)
 
 
