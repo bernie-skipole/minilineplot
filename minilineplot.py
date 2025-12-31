@@ -91,7 +91,7 @@ class Axis:
     description:str = ""           # printed at the bottom of the chart
 
     verticalgrid:int = 1           # 0 is no vertical grid lines, 1 is a line for every x axis interval, 2 is a line for every second interval.
-    horzontalgrid:int = 1          # 0 is no horizontal grid lines, 1 is a line for every y axis interval, 2 is a line for every second interval.
+    horizontalgrid:int = 1          # 0 is no horizontal grid lines, 1 is a line for every y axis interval, 2 is a line for every second interval.
 
     # The following colors are SVG colors, using standard strings
 
@@ -283,9 +283,9 @@ class Axis:
                                             "style":f"stroke:{self.gridcol};stroke-width:1"} )
 
         # horizontal grid lines
-        if self.horzontalgrid:
+        if self.horizontalgrid:
             ypos = topspace+chartheight
-            decrement = yintervalwidth * self.horzontalgrid
+            decrement = yintervalwidth * self.horizontalgrid
             for hline in range(yintervals):
                 ypos -= decrement
                 if ypos < topspace:

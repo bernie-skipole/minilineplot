@@ -93,7 +93,7 @@ If any strings are set in ystrings, the above y axis values are ignored
 
 0 is no vertical grid lines, 1 is a line for every x axis interval, 2 is a line for every second interval etc.,
 
-*horzontalgrid* default 1
+*horizontalgrid* default 1
 
 0 is no horizontal grid lines, 1 is a line for every y axis interval, 2 is a line for every second interval etc.,
 
