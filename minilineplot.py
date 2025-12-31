@@ -21,24 +21,24 @@ import xml.etree.ElementTree as ET
 
 @dataclass
 class Line:
-    "Defining a Line"
+    "Defines a Line"
     values:list[tuple]
     color:str
     stroke:int = 3
     label:str = ""
 
 
-# Note values is a list of x,y tuples
+# Note values is a list of x,y tuples, x and y being integers or floats.
 
 # If the Axis 'xstrings' argument is set as strings along the x axis,
-# for example months of the year, then the Line values tuples should be:
-# x is a percentage along the x axis, y is the actual value.
-# so [(0,59), (100,28)]  is a line from the extreme left (0%) value 59
-#                                     to the extreme right (100%) value 28
+# for example months of the year, then values tuples should have
+# x values as a percentage along the x axis (from 0 to 100).
 
-# If the Axis x axis is defined as numbers rather than strings
-# then each (x,y) tuple should be the numeric values to be plotted.
+# Similarly if the Axis 'ystrings' argument is set as strings up
+# the y axis, then values tuples should have y values as percentages.
 
+# Otherwise x,y values should be numeric values between the min and max
+# Axis attributes
 
 # color is an SVG color, using standard strings such as
 
@@ -63,22 +63,29 @@ class Axis:
     imageheight:int = 600
 
     xstrings:list[str] = field(default_factory=list)   # A list of strings used as the x axis values, use for text values such as months, etc.,
-                                                       # If any strings are set here, the following xaxis numbers are ignored
+                                                       # If any strings are set here, the following x axis arguments are ignored, and line
+                                                       # x values should all be percentages between 0 and 100.
 
-    #### or use numbers for the x axis ####
+    #### or if xstrings is empty, the following will define the x axis ####
 
     xformat:str = ".2f"            # How the x axis numbers are formatted,
     xmin:float|int = 0             # minimum x value
     xmax:float|int = 10            # maximum x value
     xintervals:int = 5             # interval spacing of values along the x axis, 5 would be five intervals and six values.
 
-    # The y axis is always just numbers
+    ystrings:list[str] = field(default_factory=list)   # A list of strings used as the y axis values. If any strings are
+                                                       # set here, the following y axis arguments are ignored, and line
+                                                       # y values should all be percentages between 0 and 100.
+
+    #### or if ystrings is empty, the following will define the y axis ####
 
     yformat:str = ".2f"            # How the y axis numbers are formatted,
     ymin:float|int = 0             # minimum y value
     ymax:float|int = 10            # maximum y value
     yintervals:int = 5             # interval spacing of values up the y axis, 5 would be five intervals and six values.
 
+    # xformat and yformat is a format string describing how numbers are printed
+    # for example the string ".2f"   gives a number to two decimal places
 
     title:str = ""                 # printed at the top of the chart
     description:str = ""           # printed at the bottom of the chart
@@ -94,10 +101,6 @@ class Axis:
     backcol:str="white"            # The background colour of the whole image
 
 
-    # xformat and yformat is a format string describing how numbers are printed
-    # for example the string ".2f"   gives a number to two decimal places
-
-
     def to_string(self, xml_declaration:bool = False) -> str:
         """Return a string SVG object. If xml_declaration is True,
            an xml tag will be included in the returned string which
@@ -105,6 +108,7 @@ class Axis:
            required if embedding the code directly into an html document"""
         doc = self._render()
         return ET.tostring(doc, encoding="unicode", xml_declaration=xml_declaration)
+
 
     def to_bytes(self, xml_declaration:bool = True) -> bytes:
         """Return a bytes SVG object. If xml_declaration is True,
@@ -114,16 +118,51 @@ class Axis:
         doc = self._render()
         return ET.tostring(doc, xml_declaration=xml_declaration)
 
+
     def to_file(self, filepath:str) -> None:
         "Save the plot to an svg image file"
         tree = ET.ElementTree(self._render())
         tree.write(filepath, xml_declaration=True)
 
+
+    def _validate(self):
+        "Some minimal validation of input values"
+        if self.xstrings:
+            # all x values should be between 0 and 100
+            for line in self.lines:
+                for point in line.values:
+                    if point[0] < 0 or point[0] > 100:
+                        raise ValueError("x values should be between 0 and 100")
+        else:
+            if self.xmax <= self.xmin:
+                raise ValueError("xmax, xmin values incorrect")
+            for line in self.lines:
+                for point in line.values:
+                    if point[0] < self.xmin or point[0] > self.xmax:
+                        raise ValueError("x value exceeds limits")
+
+        if self.ystrings:
+            # all y values should be between 0 and 100
+            for line in self.lines:
+                for point in line.values:
+                    if point[1] < 0 or point[1] > 100:
+                        raise ValueError("y values should be between 0 and 100")
+        else:
+            if self.ymax <= self.ymin:
+                raise ValueError("ymax, ymin values incorrect")
+            for line in self.lines:
+                for point in line.values:
+                    if point[1] < self.ymin or point[1] > self.ymax:
+                        raise ValueError("y value exceeds limits")
+
+
     def _render(self) -> ET.Element:
         "Render the svg image as an elementTree element"
 
-        # get the spacing around the chart
+        # some limited validation
+        self._validate()          
 
+        # get the spacing around the chart
         if self.title:
             topspace = self.fontsize * 3  # space at top for title
         else:
@@ -138,8 +177,11 @@ class Axis:
         chartheight = self.imageheight - topspace - botspace
 
         # get length of the yaxis text which will be on the left side of the chart
-        ysetformat = '{:' + self.yformat + '}'
-        ytextlen = max( len(ysetformat.format(self.ymin)), len(ysetformat.format(self.ymax)))
+        if self.ystrings:
+            ytextlen = max( len(ystring) for ystring in self.ystrings )
+        else:
+            ysetformat = '{:' + self.yformat + '}'
+            ytextlen = max( len(ysetformat.format(self.ymin)), len(ysetformat.format(self.ymax)))
 
         # define width leftspace which will be to the left of the chart
         leftspace =  self.fontsize * ytextlen
@@ -170,31 +212,37 @@ class Axis:
         ### rectangle of background colour, the same size as the whole image
         ET.SubElement(doc, 'rect', {"width":str(self.imagewidth), "height":str(self.imageheight), "x":"0","y":"0", "fill":self.backcol})
 
-        ### rectangle of chart background color
+        ## optimize chart width, so intervals fall on integer pixels
+
         # to get best width of chart, xintervals = number of intervals on the x axis
         if self.xstrings:
             xintervals = len(self.xstrings) - 1
         else:
             xintervals = self.xintervals
 
+        if self.ystrings:
+            yintervals = len(self.ystrings) - 1
+        else:
+            yintervals = self.yintervals
+
         # get better sizing of chart, so interval measurements are all in integers
         xintervalwidth = round(chartwidth / xintervals)
         chartwidth = xintervalwidth * xintervals
         rightspace = self.imagewidth - leftspace - chartwidth
 
-        # to get height of chart, self.yintervals = number of intervals on the y axis
-        yintervalwidth = round(chartheight / self.yintervals)
-        chartheight = yintervalwidth * self.yintervals
+        # to get height of chart
+        yintervalwidth = round(chartheight / yintervals)
+        chartheight = yintervalwidth * yintervals
         botspace = self.imageheight - topspace - chartheight
         
-
+        ### rectangle of chart background color
         ET.SubElement(doc, 'rect', {"width":str(chartwidth), "height":str(chartheight),
                                     "x":str(leftspace), "y":str(topspace), "fill":self.chartbackcol})
 
         # title at top of chart
         if self.title:
             t = ET.SubElement(doc, 'text', {"x":str(leftspace + chartwidth//4), "y":str(10 + self.fontsize),
-                                            "fill":self.axiscol, "fill":self.axiscol})
+                                            "fill":self.axiscol})
             t.text = self.title
 
         ### x axis
@@ -217,7 +265,7 @@ class Axis:
                                     "style":f"stroke:{self.axiscol};stroke-width:3"} )
         # add y ticks
         ypos = topspace
-        for tick in range(self.yintervals+1):
+        for tick in range(yintervals+1):
             ET.SubElement(doc, 'line', {"x1":str(leftspace-6), "y1":str(ypos),
                                         "x2":str(leftspace+3), "y2":str(ypos), "style":f"stroke:{self.axiscol};stroke-width:1"} )
             ypos += yintervalwidth
@@ -238,7 +286,7 @@ class Axis:
         if self.horzontalgrid:
             ypos = topspace+chartheight
             decrement = yintervalwidth * self.horzontalgrid
-            for hline in range(self.yintervals):
+            for hline in range(yintervals):
                 ypos -= decrement
                 if ypos < topspace:
                     break
@@ -253,7 +301,7 @@ class Axis:
         if self.xstrings:
             for txt in self.xstrings:
                 tel = ET.SubElement(doc, 'text', {"x":str(xpos), "y":str(ypos),
-                                                  "fill":self.axiscol, "fill":self.axiscol})
+                                                  "fill":self.axiscol})
                 tel.text = txt
                 xpos += xintervalwidth
         else:
@@ -262,7 +310,7 @@ class Axis:
             xsetformat = '{:' + self.xformat + '}'
             for interval in range(xintervals+1):
                 tel = ET.SubElement(doc, 'text', {"x":str(xpos), "y":str(ypos),
-                                                  "fill":self.axiscol, "fill":self.axiscol})
+                                                  "fill":self.axiscol})
                 tel.text = xsetformat.format(xval)
                 xpos += xintervalwidth
                 xval += xvalinterval
@@ -270,26 +318,36 @@ class Axis:
         # description at bottom of chart
         if self.description:
             desc = ET.SubElement(doc, 'text', {"x":str(leftspace), "y":str(self.imageheight - 10 - self.fontsize),
-                                              "fill":self.axiscol, "fill":self.axiscol})
+                                              "fill":self.axiscol})
             desc.text = self.description
 
         # y axis text
-        yvalinterval = (self.ymax - self.ymin) / self.yintervals
-        yval = self.ymax
         ypos = topspace + self.fontsize//5
-        for interval in range(self.yintervals+1):
-            tel = ET.SubElement(doc, 'text', {"x":str(leftspace-10), "y":str(ypos),
-                                              "fill":self.axiscol, "fill":self.axiscol, "text-anchor":"end"})
-            tel.text = ysetformat.format(yval)
-            ypos += yintervalwidth
-            yval -= yvalinterval
+        if self.ystrings:
+            for txt in reversed(self.ystrings):
+                tel = ET.SubElement(doc, 'text', {"x":str(leftspace-10), "y":str(ypos),
+                                                  "fill":self.axiscol, "text-anchor":"end"})
+                tel.text = txt
+                ypos += yintervalwidth
+        else:
+            yvalinterval = (self.ymax - self.ymin) / yintervals
+            yval = self.ymax
+            for interval in range(yintervals+1):
+                tel = ET.SubElement(doc, 'text', {"x":str(leftspace-10), "y":str(ypos),
+                                                  "fill":self.axiscol, "text-anchor":"end"})
+                tel.text = ysetformat.format(yval)
+                ypos += yintervalwidth
+                yval -= yvalinterval
 
         # draw the lines
-        yspan = self.ymax-self.ymin
         for line in self.lines:
             points = []
             for x,y in line.values:
-                py = round(topspace+chartheight - (y-self.ymin)*chartheight/yspan)
+                if self.ystrings:
+                    # y values as percentage of chartheight
+                    py = round(topspace+chartheight - y*chartheight/100)
+                else:
+                    py = round(topspace+chartheight - (y-self.ymin)*chartheight/(self.ymax-self.ymin))
                 if self.xstrings:
                     # x values as percentage of chartwidth
                     px = round(leftspace + x*chartwidth/100)
@@ -298,7 +356,6 @@ class Axis:
                 points.append(f"{px},{py}")
             pointstring = " ".join(points)
             ET.SubElement(doc, 'polyline', {"style":f"fill:none;stroke:{line.color};stroke-width:{line.stroke}", "points":pointstring})
-
 
         # draw the index
         if labelengths:
@@ -314,7 +371,6 @@ class Axis:
 
                 lbl.text = line.label
                 ypos += 3*self.fontsize
-
 
         return doc
        

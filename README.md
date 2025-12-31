@@ -17,24 +17,22 @@ it can also create an svg image, either as a bytes object, or saved to a file.
 
 Arguments
 
-*values*  a list of x,y tuples
+*values*  a list of x,y tuples, x and y being integers or floats.
 
-*color*  an SVG color of the line
+*color*  an SVG color of the line, such as 'blue'.
 
 *stroke*  line width, 1 for a thin line.
 
 *label*  A label string for a key, if not given, the key will not be drawn
 
 
-If the Axis 'xstrings' argument is set as strings along the x axis,
-for example months of the year, then the Line values tuples should be:
-x  is a percentage along the x axis, y is the actual value.
+If the Axis 'xstrings' argument is set as strings along the x axis, for example months of the year,
+then values tuples should have x values as a percentage along the x axis (from 0 to 100).
 
-so [(0,59), (100,28)]  is a line from
+Similarly if the Axis 'ystrings' argument is set as strings up the y axis, then values tuples
+should have y values as percentages.
 
-the extreme left (0%) value 59 to the extreme right (100%) value 28
-
-If the Axis x axis is defined as numbers rather than strings then each (x,y) tuple should be the numeric values to be plotted.
+Otherwise x,y values should be numeric values between the min and max Axis attributes.
 
 color is an SVG color, using standard strings such as
 
@@ -73,7 +71,9 @@ Alternatively, the above argument can be left empty and the following x axis val
 
 If any strings are set in xstrings, the above numbers are ignored
 
-The y axis is always just numbers
+*ystrings* A list of strings used as the y axis values.
+
+If any strings are set in ystrings line y values should all be percentages between 0 and 100.
 
 *yformat* default string ".2f" Sets how the y axis numbers are formatted.
 
@@ -82,6 +82,8 @@ The y axis is always just numbers
 *ymax* default 10, the maximum y value
 
 *yintervals* default 5, the interval spacing of values along the y axis, 5 would be five intervals and six values.
+
+If any strings are set in ystrings, the above y axis values are ignored
 
 *title* default "", A string printed at the top of the chart
 
@@ -109,6 +111,8 @@ xformat and yformat are strings describing how numbers are printed, for example 
 
 If chart text starts overlapping, either decrease font size, or increase the image size while keeping fontsize the same.
 
+All arguments are also object attributes, and can be changed as required.
+
 Methods
 
 *to_string(xml_declaration = False)*
@@ -125,7 +129,7 @@ Save the plot to an svg image file
 
 To install, either use Pypi, or simply copy minilineplot.py to your own project files, or just cut and paste the contents. The code is public domain.
 
-Note, to keep things simple there is no data validation, so lines with values outside the axis will not be caught, it is rubbish in = rubbish out.
+Note, to keep things simple there is very little data validation, rubbish in = rubbish out.
 
 ![Test image](https://raw.githubusercontent.com/bernie-skipole/minilineplot/main/test.svg)
 
