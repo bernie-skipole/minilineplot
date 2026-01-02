@@ -30,15 +30,7 @@ class Line:
 
 # Note values is a list of x,y tuples, x and y being integers or floats.
 
-# If the Axis 'xstrings' argument is set as strings along the x axis,
-# for example months of the year, then values tuples should have
-# x values as a percentage along the x axis (from 0 to 100).
-
-# Similarly if the Axis 'ystrings' argument is set as strings up
-# the y axis, then values tuples should have y values as percentages.
-
-# Otherwise x,y values should be numeric values between the min and max
-# Axis attributes
+# x,y values should be values between the min and max Axis attributes
 
 # color is an SVG color, using standard strings such as
 
@@ -62,36 +54,43 @@ class Axis:
     imagewidth:int = 800
     imageheight:int = 600
 
-    xstrings:list[str] = field(default_factory=list)   # A list of strings used as the x axis values, use for text values such as months, etc.,
-                                                       # If any strings are set here, the following x axis arguments are ignored, and line
-                                                       # x values should all be percentages between 0 and 100.
+    xstrings:list[str] = field(default_factory=list)
 
-    #### or if xstrings is empty, the following will define the x axis ####
+   # xstrings is an optional list of strings used as the x axis values, use for
+   # text values such as months, etc.,
+   # If xstrings is left empty, the following two arguments will define the x axis text
 
-    xformat:str = ".2f"            # How the x axis numbers are formatted,
+    xformat:str = ".1f"            # How the x axis numbers are formatted,
+    xintervals:int = 5             # interval spacing of values along the x axis
+                                   # 5 would be five intervals and six values.
+
+    # The above values are ignored if xstrings is populated
+
     xmin:float|int = 0             # minimum x value
-    xmax:float|int = 10            # maximum x value
-    xintervals:int = 5             # interval spacing of values along the x axis, 5 would be five intervals and six values.
+    xmax:float|int = 100           # maximum x value
 
-    ystrings:list[str] = field(default_factory=list)   # A list of strings used as the y axis values. If any strings are
-                                                       # set here, the following y axis arguments are ignored, and line
-                                                       # y values should all be percentages between 0 and 100.
+    ystrings:list[str] = field(default_factory=list)
 
-    #### or if ystrings is empty, the following will define the y axis ####
+    # ystrings is an optional list of strings used as the y axis values.
+    # If ystrings is left empty, the following two arguments will define the y axis text
 
-    yformat:str = ".2f"            # How the y axis numbers are formatted,
-    ymin:float|int = 0             # minimum y value
-    ymax:float|int = 10            # maximum y value
-    yintervals:int = 5             # interval spacing of values up the y axis, 5 would be five intervals and six values.
+    yformat:str = ".1f"            # How the y axis numbers are formatted,
+    yintervals:int = 5             # interval spacing of values up the y axis,
+                                   # 5 would be five intervals and six values.
 
-    # xformat and yformat is a format string describing how numbers are printed
+    # The above values are ignored if ystrings is populated
+
+    # xformat and yformat are format strings describing how numbers are printed
     # for example the string ".2f"   gives a number to two decimal places
+
+    ymin:float|int = 0             # minimum y value
+    ymax:float|int = 100           # maximum y value
 
     title:str = ""                 # printed at the top of the chart
     description:str = ""           # printed at the bottom of the chart
 
     verticalgrid:int = 1           # 0 is no vertical grid lines, 1 is a line for every x axis interval, 2 is a line for every second interval.
-    horizontalgrid:int = 1          # 0 is no horizontal grid lines, 1 is a line for every y axis interval, 2 is a line for every second interval.
+    horizontalgrid:int = 1         # 0 is no horizontal grid lines, 1 is a line for every y axis interval, 2 is a line for every second interval.
 
     # The following colors are SVG colors, using standard strings
 
@@ -127,39 +126,30 @@ class Axis:
 
     def _validate(self):
         "Some minimal validation of input values"
+        if self.xmax <= self.xmin:
+            raise ValueError("xmax, xmin values incorrect")
+        if self.ymax <= self.ymin:
+            raise ValueError("ymax, ymin values incorrect")
         if self.xstrings:
-            # all x values should be between 0 and 100
-            for line in self.lines:
-                for point in line.values:
-                    if point[0] < 0 or point[0] > 100:
-                        raise ValueError("x values should be between 0 and 100")
-        else:
-            if self.xmax <= self.xmin:
-                raise ValueError("xmax, xmin values incorrect")
-            for line in self.lines:
-                for point in line.values:
-                    if point[0] < self.xmin or point[0] > self.xmax:
-                        raise ValueError("x value exceeds limits")
-
+            if isinstance(self.xstrings, str):
+                raise ValueError("xstrings must be a list of strings")
         if self.ystrings:
-            # all y values should be between 0 and 100
-            for line in self.lines:
-                for point in line.values:
-                    if point[1] < 0 or point[1] > 100:
-                        raise ValueError("y values should be between 0 and 100")
-        else:
-            if self.ymax <= self.ymin:
-                raise ValueError("ymax, ymin values incorrect")
-            for line in self.lines:
-                for point in line.values:
-                    if point[1] < self.ymin or point[1] > self.ymax:
-                        raise ValueError("y value exceeds limits")
+            if isinstance(self.ystrings, str):
+                raise ValueError("ystrings must be a list of strings")
+        for line in self.lines:
+            for point in line.values:
+                if point[0] < self.xmin or point[0] > self.xmax:
+                    raise ValueError("x value exceeds limits")
+                if point[1] < self.ymin or point[1] > self.ymax:
+                    raise ValueError("y value exceeds limits")
 
 
     def _render(self) -> ET.Element:
         "Render the svg image as an elementTree element"
 
-        # some limited validation
+        # some limited validation, if you are embedding this code
+        # in your own script, and are sure of your input data, you
+        # could comment this out to speed things up slightly
         self._validate()          
 
         # get the spacing around the chart
@@ -192,9 +182,9 @@ class Axis:
         if labelengths:
             # if labels, increase rightspace to give space for an index
             longest = max(labelengths)
-            rightspace = max(self.imagewidth // 10, self.fontsize * (6 + longest)//2)
+            rightspace = round(max(self.imagewidth // 10, self.fontsize * (6 + longest)//2))
         else: 
-            rightspace =  self.imagewidth // 10
+            rightspace =  round(self.imagewidth // 10)
 
         # initial chartwidth
         chartwidth = self.imagewidth - leftspace - rightspace
@@ -241,7 +231,7 @@ class Axis:
 
         # title at top of chart
         if self.title:
-            t = ET.SubElement(doc, 'text', {"x":str(leftspace + chartwidth//4), "y":str(10 + self.fontsize),
+            t = ET.SubElement(doc, 'text', {"x":str(round(leftspace + chartwidth//4)), "y":str(10 + self.fontsize),
                                             "fill":self.axiscol})
             t.text = self.title
 
@@ -295,7 +285,7 @@ class Axis:
                                             "style":f"stroke:{self.gridcol};stroke-width:1"} )
 
         # x axis text
-        xpos = leftspace - (self.fontsize//2)
+        xpos = leftspace - round(self.fontsize//2)
         ypos = topspace+chartheight + 10 + self.fontsize
 
         if self.xstrings:
@@ -322,7 +312,7 @@ class Axis:
             desc.text = self.description
 
         # y axis text
-        ypos = topspace + self.fontsize//5
+        ypos = topspace + round(self.fontsize//5)
         if self.ystrings:
             for txt in reversed(self.ystrings):
                 tel = ET.SubElement(doc, 'text', {"x":str(leftspace-10), "y":str(ypos),
@@ -343,16 +333,8 @@ class Axis:
         for line in self.lines:
             points = []
             for x,y in line.values:
-                if self.ystrings:
-                    # y values as percentage of chartheight
-                    py = round(topspace+chartheight - y*chartheight/100)
-                else:
-                    py = round(topspace+chartheight - (y-self.ymin)*chartheight/(self.ymax-self.ymin))
-                if self.xstrings:
-                    # x values as percentage of chartwidth
-                    px = round(leftspace + x*chartwidth/100)
-                else:
-                    px = round(leftspace + (x-self.xmin)*chartwidth/(self.xmax-self.xmin))
+                py = round(topspace+chartheight - (y-self.ymin)*chartheight/(self.ymax-self.ymin))
+                px = round(leftspace + (x-self.xmin)*chartwidth/(self.xmax-self.xmin))
                 points.append(f"{px},{py}")
             pointstring = " ".join(points)
             ET.SubElement(doc, 'polyline', {"style":f"fill:none;stroke:{line.color};stroke-width:{line.stroke}", "points":pointstring})
@@ -390,12 +372,10 @@ if __name__ == "__main__":
 
     line3 = Line(values = list((x,x**2) for x in range(11)),
                 color = "red",
-                stroke = 3,
                 label = "y = x squared")
 
 
     example = Axis( [line1, line2, line3],
-                    xformat = ".0f",  
                     xmin = 0,
                     xmax = 10,
                     xintervals = 10,

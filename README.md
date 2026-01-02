@@ -21,18 +21,12 @@ Arguments
 
 *color*  an SVG color of the line, such as 'blue'.
 
-*stroke*  line width, 1 for a thin line.
+*stroke*  line width, 1 for a thin line, default is 3.
 
 *label*  A label string for a key, if not given, the key will not be drawn
 
 
-If the Axis 'xstrings' argument is set as strings along the x axis, for example months of the year,
-then values tuples should have x values as a percentage along the x axis (from 0 to 100).
-
-Similarly if the Axis 'ystrings' argument is set as strings up the y axis, then values tuples
-should have y values as percentages.
-
-Otherwise x,y values should be numeric values between the min and max Axis attributes.
+x,y values should be values between the min and max Axis attributes
 
 color is an SVG color, using standard strings such as
 
@@ -57,33 +51,33 @@ Arguments
 
 *imageheight* default 600
 
-*xstrings* A list of strings used as the x axis values, use for text values such as months, etc.,
+*xstrings* an optional list of strings used as the x axis values, use for text values such as months, etc.,
 
-Alternatively, the above argument can be left empty and the following x axis values set instead.
+If xstrings is left empty, the following two arguments will define the x axis text
 
-*xformat* default string ".2f" Sets how the x axis numbers are formatted.
-
-*xmin* default 0, the minimum x value
-
-*xmax* default 10, the maximum x value
+*xformat* default string ".1f" Sets how the x axis numbers are formatted.
 
 *xintervals* default 5, the interval spacing of values along the x axis, 5 would be five intervals and six values.
 
-If any strings are set in xstrings, the above numbers are ignored
+The above values are ignored if xstrings is populated.
 
-*ystrings* A list of strings used as the y axis values.
+*xmin* default 0, the minimum x value
 
-If any strings are set in ystrings line y values should all be percentages between 0 and 100.
+*xmax* default 100, the maximum x value
 
-*yformat* default string ".2f" Sets how the y axis numbers are formatted.
+*ystrings* an optional list of strings used as the y axis values.
 
-*ymin* default 0, the minimum y value
+If ystrings is left empty, the following two arguments will define the y axis text
 
-*ymax* default 10, the maximum y value
+*yformat* default string ".1f" Sets how the y axis numbers are formatted.
 
 *yintervals* default 5, the interval spacing of values along the y axis, 5 would be five intervals and six values.
 
-If any strings are set in ystrings, the above y axis values are ignored
+The above values are ignored if ystrings is populated.
+
+*ymin* default 0, the minimum y value
+
+*ymax* default 100, the maximum y value
 
 *title* default "", A string printed at the top of the chart
 
