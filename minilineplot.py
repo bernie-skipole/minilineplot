@@ -163,6 +163,9 @@ class Axis:
     ymin:float|int = 0             # minimum y value
     ymax:float|int = 100           # maximum y value
 
+    # If chart text starts overlapping, either decrease font size,
+    # or increase the image size while keeping fontsize the same
+
     title:str = ""                 # printed at the top of the chart
     description:str = ""           # printed at the bottom of the chart
 
@@ -503,13 +506,9 @@ if __name__ == "__main__":
 
     example = Axis( [line1, line2, line3],
                     title = "Example Chart",
-                    description = "Fig 1 : Example chart",
-                  )
+                    description = "Fig 1 : Example chart")
     example.auto_x()
     example.auto_y()
-
-    # If chart text starts overlapping, either decrease font size,
-    # or increase the image size while keeping fontsize the same
 
     print("Creating file test.svg")
     example.to_file("test.svg")

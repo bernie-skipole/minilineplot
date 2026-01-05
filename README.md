@@ -15,7 +15,7 @@ it can also create an svg image, either as a bytes object, or saved to a file.
 
 # Line
 
-Arguments
+**Arguments**
 
 *values*  a list of x,y tuples, x and y being integers or floats.
 
@@ -41,7 +41,7 @@ HSL/HSLA: "hsl(0,100%,50%)" or "hsla(0,100%,50%,0.5)" (hue, saturation, lightnes
 
 # Axis
 
-Arguments
+**Arguments**
 
 *lines* list of Line objects
 
@@ -107,7 +107,17 @@ If chart text starts overlapping, either decrease font size, or increase the ima
 
 All arguments are also object attributes, and can be changed as required.
 
-Methods
+**Methods**
+
+*auto_x()*
+
+If xstrings has a value this does nothing, just returns. Otherwise it inspects the lines and auto chooses x axis values which it sets into self.xmax, self.xmin, self.xformat and self.xintervals.
+
+This could be usefull for generated line data, or for initiall viewing after which better values could be chosen.
+
+*auto_y()*
+
+If ystrings has a value this does nothing, just returns. Otherwise it inspects the lines and auto picks y axis values which it sets into self.ymax, self.ymin, self.yformat and self.yintervals.
 
 *to_string(xml_declaration = False)*
 
@@ -124,6 +134,18 @@ Save the plot to an svg image file
 To install, either use Pypi, or simply copy minilineplot.py to your own project files, or just cut and paste the contents. The code is public domain.
 
 Note, to keep things simple there is very little data validation, rubbish in = rubbish out.
+
+A typical example might be:
+
+    line1 = Line(values = [(0,15), (2,20), (4, 50), (6, 75), (10, 60)],
+                 color = "green",
+                 label = "green line")
+    example = Axis( [line1],
+                    title = "Example Chart",
+                    description = "Fig 1 : Example chart")
+    example.auto_x()
+    example.auto_y()
+    example.to_file("test.svg")
 
 ![Test image](https://raw.githubusercontent.com/bernie-skipole/minilineplot/main/test.svg)
 
