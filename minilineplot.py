@@ -18,6 +18,83 @@
 from dataclasses import dataclass, field
 import xml.etree.ElementTree as ET
 
+import decimal
+
+D = decimal.Decimal
+
+
+def _brkt(vmax, vmin):
+    "Bracket vmax and vmin"
+    vdmax = D(vmax)
+    vdmin = D(vmin)
+    span = vdmax - vdmin
+    spanplus = span + span/D(4)  # increase span by 25%
+    if vdmin > D(0) and vdmax < spanplus:
+        # vdmin is positive and close to zero, so prefer it to be zero
+        bot = D(0)
+        for prec in range(1, 20):
+            ctx = decimal.Context(prec=prec)
+            top = ctx.next_plus(vdmax)
+            if top <= spanplus:
+                break
+    elif vdmax < D(0) and vdmin.copy_abs() < spanplus:
+        # vdmax is negative and close to zero, so prefer it to be zero
+        top = D(0)
+        for prec in range(1, 20):
+            ctx = decimal.Context(prec=prec)
+            bot = ctx.next_minus(vdmin)
+            if bot.copy_abs() <= spanplus:
+                break
+    else:
+        for prec in range(1, 20):
+            ctx = decimal.Context(prec=prec)
+            top = ctx.next_plus(vdmax)
+            bot = ctx.next_minus(vdmin)
+            if ctx.subtract(top,bot) <= spanplus:
+                break
+
+    if bot >= D(0) and top < spanplus:
+        bot = D(0)
+    elif top <= D(0) and bot.copy_abs() < spanplus:
+        top = D(0)
+
+    dnum1 = _numbers_after_point(top, bot)
+    dnum2 = _numbers_after_point(vdmax, bot)
+    dnum3 = _numbers_after_point(top, vdmin)
+    dnum4 = _numbers_after_point(vdmax, vdmin)
+
+    dnum = min(dnum1, dnum2, dnum3, dnum4)
+    if dnum == dnum4:
+        top = vdmax
+        bot = vdmin
+    elif dnum == dnum3:
+        bot = vdmin
+    elif dnum == dnum2:
+        top = vdmax
+ 
+    # Add zero below gets rid of negative zeros
+
+    return float(top)+0, float(bot)+0, f".{dnum}f"
+
+
+def _numbers_after_point(vmax, vmin):
+    "get decimal numbers after the . when axis divides this into four"
+    dnums = []
+    part = (vmax - vmin)/D(4)
+    value = vmin
+    for n in range(5):
+        s = f"{value:.6f}".rstrip("0")
+        if '.' in s:
+            dnums.append( len(s.split('.')[1]) )
+        value += part
+
+    if dnums:
+        dnum = max(dnums)
+    else:
+        dnum = 0
+
+    return dnum
+
 
 @dataclass
 class Line:
@@ -99,6 +176,55 @@ class Axis:
     chartbackcol:str="white"       # the background colour of the chart
     backcol:str="white"            # The background colour of the whole image
 
+
+    def auto_y(self):
+        """If ystrings has a value this does nothing, just returns.
+           Otherwise it inspects the lines and auto picks y axis values
+           which it sets into self.ymax, self.ymin, self.yformat and self.yintervals
+           """
+        if self.ystrings:
+            return
+        ymax = None
+        ymin = None
+        for line in self.lines:
+            for point in line.values:
+                if ymax is None:
+                    ymax = point[1]
+                    ymin = point[1]
+                    continue
+                if point[1] < ymin:
+                    ymin = point[1]
+                if point[1] > ymax:
+                    ymax = point[1]
+
+        self.ymax, self.ymin, self.yformat = _brkt(ymax, ymin)
+        self.yintervals = 4
+
+
+    def auto_x(self):
+        """If xstrings has a value this does nothing, just returns.
+           Otherwise it inspects the lines and auto picks x axis values
+           which it sets into self.xmax, self.xmin, self.xformat and self.xintervals
+           """
+        if self.xstrings:
+            return
+        xmax = None
+        xmin = None
+        for line in self.lines:
+            for point in line.values:
+                if xmax is None:
+                    xmax = point[0]
+                    xmin = point[0]
+                    continue
+                if point[0] < xmin:
+                    xmin = point[0]
+                if point[0] > xmax:
+                    xmax = point[0]
+
+
+        self.xmax, self.xmin, self.xformat = _brkt(xmax, xmin)
+        self.xintervals = 4
+        
 
     def to_string(self, xml_declaration:bool = False) -> str:
         """Return a string SVG object. If xml_declaration is True,
@@ -376,15 +502,11 @@ if __name__ == "__main__":
 
 
     example = Axis( [line1, line2, line3],
-                    xmin = 0,
-                    xmax = 10,
-                    xintervals = 10,
-                    ymin = 0,
-                    ymax = 100,
-                    yintervals = 5,     
                     title = "Example Chart",
                     description = "Fig 1 : Example chart",
                   )
+    example.auto_x()
+    example.auto_y()
 
     # If chart text starts overlapping, either decrease font size,
     # or increase the image size while keeping fontsize the same
