@@ -18,7 +18,7 @@
 from dataclasses import dataclass, field
 import xml.etree.ElementTree as ET
 
-import decimal
+import decimal, time
 
 D = decimal.Decimal
 
@@ -105,7 +105,9 @@ class Line:
     label:str = ""
 
 
-# Note values is a list of x,y tuples, x and y being integers or floats.
+# Note values is a list of (x,y) tuples, x and y being integers or floats.
+# Values could also be a deque holding (x,y) tuples, which may be useful if
+# measurements are being appended and a maximum number of points are to be retained.
 
 # x,y values should be values between the min and max Axis attributes
 
@@ -180,7 +182,7 @@ class Axis:
     backcol:str="white"            # The background colour of the whole image
 
 
-    def auto_y(self):
+    def auto_y(self) -> None:
         """If ystrings has a value this does nothing, just returns.
            Otherwise it inspects the lines and auto picks y axis values
            which it sets into self.ymax, self.ymin, self.yformat and self.yintervals
@@ -204,7 +206,7 @@ class Axis:
         self.yintervals = 4
 
 
-    def auto_x(self):
+    def auto_x(self) -> None:
         """If xstrings has a value this does nothing, just returns.
            Otherwise it inspects the lines and auto picks x axis values
            which it sets into self.xmax, self.xmin, self.xformat and self.xintervals
@@ -227,6 +229,111 @@ class Axis:
 
         self.xmax, self.xmin, self.xformat = _brkt(xmax, xmin)
         self.xintervals = 4
+
+
+    def auto_time_x(self, hourspan:int = 4, localtime:bool=True) -> None:
+        """If this is called, all x values should be a time in seconds since the
+           epoch, such as that returned by time.time().
+           hourspan should be the number of hours to display along the x axis
+           with a value from 1 to 48. The hours shown will be the given span of
+           hours up to the latest value. So the latest measurement will be shown. 
+           This method sets self.xmax, self.xmin and self.xstrings to display
+           strings along the x axis as hours. These will be local hours if
+           localtime is True, or UTC hours if False.
+           """
+        if not isinstance(hourspan, int):
+            raise ValueError("hourspan should be an integer between 1 and 48")
+        if hourspan < 1 or hourspan > 48:
+            raise ValueError("hourspan should be an integer between 1 and 48")
+
+        xmax = None
+        for line in self.lines:
+            if xmax is None:
+                xmax = line.values[-1][0]
+                continue
+            lasttimestamp = line.values[-1][0]
+            if lasttimestamp > xmax:
+                xmax = lasttimestamp
+
+        # time values are in seconds, but the chart axis is labelled in hours,
+        # which are modulo 24, local time, daylight saving etc....
+
+        self.xstrings = []
+
+        # get latest timestamp
+        lasttimestruct = time.localtime(xmax)
+        # sechour will be the timestamp of the hour of the last measurement
+        # (found by setting minutes and seconds to zero)
+        sechour = round(time.mktime((lasttimestruct.tm_year,
+                               lasttimestruct.tm_mon,
+                               lasttimestruct.tm_mday,
+                               lasttimestruct.tm_hour,
+                               0,
+                               0,
+                               lasttimestruct.tm_wday,
+                               lasttimestruct.tm_yday,
+                               lasttimestruct.tm_isdst)))
+        if hourspan == 1:
+            # keep adding 15 minutes until time is greater than xmax, and make that self.xmax
+            if xmax < (sechour + 900):
+                self.xmax = sechour + 900
+            elif xmax < (sechour + 1800):
+                self.xmax = sechour + 1800
+            elif xmax < (sechour + 2700):
+                self.xmax = sechour + 2700
+            else:
+                self.xmax = sechour + 3600
+            self.xmin = self.xmax - 3600
+            for seconds in range(self.xmin, self.xmax+900, 900):
+                if localtime:
+                    self.xstrings.append(f"{time.localtime(seconds).tm_hour}:{time.localtime(seconds).tm_min:02.0f}")
+                else:
+                    self.xstrings.append(f"{time.gmtime(seconds).tm_hour}:{time.localtime(seconds).tm_min:02.0f}")
+        elif hourspan == 2:
+            # keep adding 30 minutes until time is greater than xmax, and make that self.xmax
+            if xmax < sechour + 1800:
+                self.xmax = sechour + 1800
+            else:
+                self.xmax = sechour + 3600
+            self.xmin = self.xmax - 7200
+            for seconds in range(self.xmin, self.xmax+1800, 1800):
+                if localtime:
+                    self.xstrings.append(f"{time.localtime(seconds).tm_hour}:{time.localtime(seconds).tm_min:02.0f}")
+                else:
+                    self.xstrings.append(f"{time.gmtime(seconds).tm_hour}:{time.localtime(seconds).tm_min:02.0f}")
+        else:
+            # Add an hours worth of seconds, to get self.xmax - the chart x axis rightmost seconds value
+            self.xmax = sechour + 3600
+            self.xmin = self.xmax - (3600 * hourspan)   # hours back from maxts - the chart x axis leftmost value
+            # create the hour strings for the x axis labels
+            xstrings = []
+            for seconds in range(self.xmin, self.xmax+3600, 3600):
+                if localtime:
+                    t = time.localtime(seconds).tm_hour
+                else:
+                    t = time.gmtime(seconds).tm_hour
+                if hourspan <= 6:
+                    self.xstrings.append(str(t))
+                elif hourspan <= 12:
+                    if t % 2 == 0:
+                        self.xstrings.append(str(t))
+                    else:
+                        self.xstrings.append('')
+                elif hourspan <= 24:
+                    if t % 4 == 0:
+                        self.xstrings.append(str(t))
+                    else:
+                        self.xstrings.append('')
+                elif hourspan <= 36:
+                    if t % 6 == 0:
+                        self.xstrings.append(str(t))
+                    else:
+                        self.xstrings.append('')
+                else:
+                    if t % 8 == 0:
+                        self.xstrings.append(str(t))
+                    else:
+                        self.xstrings.append('')
         
 
     def to_string(self, xml_declaration:bool = False) -> str:
@@ -254,7 +361,9 @@ class Axis:
 
 
     def _validate(self):
-        "Some minimal validation of input values"
+        """Some minimal validation of input values
+           x values must be increasing values along the x axis
+           y values must be within self.ymin and self.ymax"""
         if self.xmax <= self.xmin:
             raise ValueError("xmax, xmin values incorrect")
         if self.ymax <= self.ymin:
@@ -266,11 +375,18 @@ class Axis:
             if isinstance(self.ystrings, str):
                 raise ValueError("ystrings must be a list of strings")
         for line in self.lines:
+            lastx = None
             for point in line.values:
-                if point[0] < self.xmin or point[0] > self.xmax:
-                    raise ValueError("x value exceeds limits")
+                if not ( isinstance(point[0], int) or isinstance(point[0], float) ):
+                    raise ValueError("x values should be either integers or floats")
+                if not ( isinstance(point[1], int) or isinstance(point[1], float) ):
+                    raise ValueError("y values should be either integers or floats")
                 if point[1] < self.ymin or point[1] > self.ymax:
                     raise ValueError("y value exceeds limits")
+                if lastx is not None:
+                    if lastx > point[0]:
+                        raise ValueError("x values must be increasing values")
+                lastx = point[0]
 
 
     def _render(self) -> ET.Element:
@@ -419,9 +535,10 @@ class Axis:
 
         if self.xstrings:
             for txt in self.xstrings:
-                tel = ET.SubElement(doc, 'text', {"x":str(xpos), "y":str(ypos),
-                                                  "fill":self.axiscol})
-                tel.text = txt
+                if txt:
+                    tel = ET.SubElement(doc, 'text', {"x":str(xpos), "y":str(ypos),
+                                                      "fill":self.axiscol})
+                    tel.text = txt
                 xpos += xintervalwidth
         else:
             xvalinterval = (self.xmax - self.xmin) / xintervals
@@ -444,9 +561,10 @@ class Axis:
         ypos = topspace + round(self.fontsize//5)
         if self.ystrings:
             for txt in reversed(self.ystrings):
-                tel = ET.SubElement(doc, 'text', {"x":str(leftspace-10), "y":str(ypos),
-                                                  "fill":self.axiscol, "text-anchor":"end"})
-                tel.text = txt
+                if txt:
+                    tel = ET.SubElement(doc, 'text', {"x":str(leftspace-10), "y":str(ypos),
+                                                      "fill":self.axiscol, "text-anchor":"end"})
+                    tel.text = txt
                 ypos += yintervalwidth
         else:
             yvalinterval = (self.ymax - self.ymin) / yintervals
@@ -462,9 +580,13 @@ class Axis:
         for line in self.lines:
             points = []
             for x,y in line.values:
+                if x < self.xmin or x > self.xmax:
+                    continue
                 py = round(topspace+chartheight - (y-self.ymin)*chartheight/(self.ymax-self.ymin))
                 px = round(leftspace + (x-self.xmin)*chartwidth/(self.xmax-self.xmin))
                 points.append(f"{px},{py}")
+            if not points:
+                continue
             pointstring = " ".join(points)
             ET.SubElement(doc, 'polyline', {"style":f"fill:none;stroke:{line.color};stroke-width:{line.stroke}", "points":pointstring})
 
@@ -503,14 +625,64 @@ if __name__ == "__main__":
                 color = "red",
                 label = "y = x squared")
 
-
-    example = Axis( [line1, line2, line3],
+    example1 = Axis( [line1, line2, line3],
                     title = "Example Chart",
                     description = "Fig 1 : Example chart")
-    example.auto_x()
-    example.auto_y()
+    example1.auto_x()
+    example1.auto_y()
 
     print("Creating file test.svg")
-    example.to_file("test.svg")
+    example1.to_file("test.svg")
+
+    import random
+    # use random y values
+
+    line4  = Line(values = [],
+                color = "black")
+    t = round(time.time())
+    for x in range(t - 180000, t+300, 300): # simulate samples every 5 minutes for 50 hours
+        line4.values.append((x, random.randint(5, 25)))
+
+    example2 = Axis( [line4],
+                    title = "Example Time Axis Chart",
+                    description = "One hour time axis chart")
+    example2.auto_time_x(hourspan=1)
+    example2.ymin = 0.0
+    example2.ymax = 30.0
+    example2.yintervals = 6
+
+    print("Creating file test2.svg")
+    example2.to_file("test2.svg")
+
+    example2.auto_time_x(hourspan=2)
+    example2.description = "Two hour time axis chart"
+    print("Creating file test3.svg")
+    example2.to_file("test3.svg")
+
+    example2.auto_time_x(hourspan=4)
+    example2.description = "Four hour time axis chart"
+    print("Creating file test4.svg")
+    example2.to_file("test4.svg")
+
+    example2.auto_time_x(hourspan=8)
+    example2.description = "Eight hour time axis chart"
+    print("Creating file test5.svg")
+    example2.to_file("test5.svg")
+
+    example2.auto_time_x(hourspan=16)
+    example2.description = "Sixteen hour time axis chart"
+    print("Creating file test6.svg")
+    example2.to_file("test6.svg")
+
+    example2.auto_time_x(hourspan=32)
+    example2.description = "Thirtytwo hour time axis chart"
+    print("Creating file test7.svg")
+    example2.to_file("test7.svg")
+
+    example2.auto_time_x(hourspan=48)
+    example2.description = "Fortyeight hour time axis chart"
+    print("Creating file test8.svg")
+    example2.to_file("test8.svg")
+
     print("Done")
 
