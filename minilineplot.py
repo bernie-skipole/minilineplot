@@ -105,11 +105,15 @@ class Line:
     label:str = ""
 
 
-# Note values is a list of (x,y) tuples, x and y being integers or floats.
-# Values could also be a deque holding (x,y) tuples, which may be useful if
+# Note values is normally a list of (x,y) tuples, x and y being integers or floats.
+# The values argument could also be a deque holding (x,y) tuples, which may be useful if
 # measurements are being appended and a maximum number of points are to be retained.
 
-# x,y values should be values between the min and max Axis attributes
+# x values should be increasing values, and any outside of the xmin xmax Axis values
+# will not cause an error, but will not be plotted
+
+# y values should be values between the ymin and ymax Axis attributes, if any are outside
+# then a ValueError will be raised when the image is created.
 
 # color is an SVG color, using standard strings such as
 
@@ -232,7 +236,7 @@ class Axis:
 
 
     def auto_time_x(self, hourspan:int = 4, localtime:bool=True) -> None:
-        """If this is called, all x values should be a time in seconds since the
+        """If this is called, all x values should be times in seconds since the
            epoch, such as that returned by time.time().
            hourspan should be the number of hours to display along the x axis
            with a value from 1 to 48. The hours shown will be the given span of

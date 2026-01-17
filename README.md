@@ -25,6 +25,14 @@ it can also create an svg image, either as a bytes object, or saved to a file.
 
 *label*  A label string for a key, if not given, the key will not be drawn
 
+x values should be increasing values, and any outside of the xmin and xmax values set
+into the Axis object will not cause an error, but will not be plotted.
+
+y values should be values between the ymin and ymax Axis attributes, if any are outside
+then a ValueError will be raised when the SVG image is created.
+
+Instead of a list, the values argument could also be a deque holding (x,y) tuples, which may be
+useful if measurements are being appended and a maximum number of points are to be retained.
 
 color is an SVG color, using standard strings such as
 
@@ -59,13 +67,13 @@ If xstrings is left empty, the following two arguments will define the x axis te
 
 The above values are ignored if xstrings is populated, intervals are taken from the number of strings.
 
-*xmin* default 0, the minimum x value
+*xmin* default 0, the minimum plotted x value
 
-*xmax* default 100, the maximum x value
+*xmax* default 100, the maximum plotted x value
 
-xmin and xmax can be set manually, either as class arguments, or setting the attributes once an Axis object is instantiated. They can also be set automatically by calling the auto_x() method.
+xmin and xmax can be set manually, either as class arguments, or setting the attributes after an Axis object is instantiated. They can also be set automatically by calling the auto_x() method.
 
-If xstrings is set with strings, xmin should be set manually to the value corresponding to the first string, and xmax to the value corresponding to the last string, this aligns values with the axis strings.
+If xstrings is set with strings, xmin should be set to the value corresponding to the first string, and xmax to the value corresponding to the last string, this aligns values with the axis strings.
 
 *ystrings* an optional list of strings used as the y axis values.
 
@@ -81,9 +89,9 @@ The above values are ignored if ystrings is populated, intervals are taken from 
 
 *ymax* default 100, the maximum y value
 
-*title* default empty string. If given this will be printed at the top of the chart
+*title* default empty string. If given this will be printed at the top of the chart.
 
-*description* default empty string. If given this will be printed at the bottom of the chart
+*description* default empty string. If given this will be printed at the bottom of the chart.
 
 *verticalgrid* default 1
 
@@ -121,11 +129,15 @@ This could be useful for generated line data, or for initiall viewing after whic
 
 If ystrings has a value this does nothing, just returns. Otherwise it inspects the lines and auto chooses y axis values which it sets into self.ymax, self.ymin, self.yformat and self.yintervals.
 
+*auto_time_x(hourspan = 4, localtime = True)*
+
+If this is called, all x values should be times in seconds since the epoch, such as that returned by time.time().
+
+hourspan should be the number of hours to display along the x axis with a value from 1 to 48. The hours shown will be the given span of hours up to the latest value. So the latest measurement will be shown.
+
+This method sets self.xmax, self.xmin to the appropriate seconds values, and self.xstrings to display strings along the x axis as hours. These will be local hours if localtime is True, or UTC hours if False. So it could be used to produce a chart as measurements are created with (time.time(), y) tuples.
+
 The following methods produce the SVG chart.
-
-They require that xmin and xmax bracket the x values given in the lines, and similarly y values should all be within ymin and ymax.
-
-Attempts to draw points outside of the chart will result in a ValueError exception.
 
 *to_string(xml_declaration = False)*
 
@@ -139,9 +151,7 @@ Returns a bytes SVG object.
 
 Saves the plot to an svg image file
 
-To install, either use Pypi, or simply copy minilineplot.py to your own project files, or just cut and paste the contents. The code is public domain.
-
-Note, to keep things simple there is very little data validation, rubbish in = rubbish out.
+To install, either use Pypi, or simply copy minilineplot.py to your own project files. The code is public domain.
 
 A typical example might be:
 
