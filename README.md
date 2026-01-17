@@ -153,6 +153,10 @@ Saves the plot to an svg image file
 
 To install, either use Pypi, or simply copy minilineplot.py to your own project files. The code is public domain.
 
+To create a number of test plots, use:
+
+python3 -m minilineplot
+
 A typical example might be:
 
     line1 = Line(values = [(0,15), (2,20), (4, 50), (6, 75), (10, 60)],

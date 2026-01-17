@@ -647,44 +647,39 @@ if __name__ == "__main__":
     for x in range(t - 180000, t+300, 300): # simulate samples every 5 minutes for 50 hours
         line4.values.append((x, random.randint(5, 25)))
 
-    example2 = Axis( [line4],
-                    title = "Example Time Axis Chart",
-                    description = "One hour time axis chart")
+    example2 = Axis( [line4], title = "Example Time Axis Chart")
     example2.auto_time_x(hourspan=1)
     example2.ymin = 0.0
     example2.ymax = 30.0
     example2.yintervals = 6
 
+    latest = time.localtime(line4.values[-1][0])
+    example2.description = f"Values to : {time.strftime('%a %d %b %Y, %I:%M%p', latest)}"
+
     print("Creating file test2.svg")
     example2.to_file("test2.svg")
 
     example2.auto_time_x(hourspan=2)
-    example2.description = "Two hour time axis chart"
     print("Creating file test3.svg")
     example2.to_file("test3.svg")
 
     example2.auto_time_x(hourspan=4)
-    example2.description = "Four hour time axis chart"
     print("Creating file test4.svg")
     example2.to_file("test4.svg")
 
     example2.auto_time_x(hourspan=8)
-    example2.description = "Eight hour time axis chart"
     print("Creating file test5.svg")
     example2.to_file("test5.svg")
 
     example2.auto_time_x(hourspan=16)
-    example2.description = "Sixteen hour time axis chart"
     print("Creating file test6.svg")
     example2.to_file("test6.svg")
 
     example2.auto_time_x(hourspan=32)
-    example2.description = "Thirtytwo hour time axis chart"
     print("Creating file test7.svg")
     example2.to_file("test7.svg")
 
     example2.auto_time_x(hourspan=48)
-    example2.description = "Fortyeight hour time axis chart"
     print("Creating file test8.svg")
     example2.to_file("test8.svg")
 
