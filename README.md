@@ -13,6 +13,27 @@ Two classes are defined.
 The Axis class has methods to create an svg string suitable for embedding in an html document
 it can also create an svg image, either as a bytes object, or saved to a file.
 
+A typical example might be:
+
+    line1 = Line(values = [(0,15), (2,20), (4, 50), (6, 75), (10, 60)],
+                 color = "green",
+                 label = "green line")
+    line2 = Line(values = [(0,95), (2,80), (5, 60), (7, 55), (8, 35), (9, 25), (10, 10)],
+                 color = "blue",
+                 label = "blue line")
+    line3 = Line(values = list((x,x**2) for x in range(11)),
+                 color = "red",
+                 label = "y = x squared")
+    example = Axis( [line1, line2, line3],
+                    title = "Example Chart",
+                    description = "Fig 1 : Example chart")
+    example.auto_x()
+    example.auto_y()
+    example.to_file("test.svg")
+
+![Test image](https://raw.githubusercontent.com/bernie-skipole/minilineplot/main/test.svg)
+
+
 # Line
 
 **Arguments (and attributes)**
@@ -156,25 +177,5 @@ To install, either use Pypi, or simply copy minilineplot.py to your own project 
 To create a number of test plots, use:
 
 python3 -m minilineplot
-
-A typical example might be:
-
-    line1 = Line(values = [(0,15), (2,20), (4, 50), (6, 75), (10, 60)],
-                 color = "green",
-                 label = "green line")
-    line2 = Line(values = [(0,95), (2,80), (5, 60), (7, 55), (8, 35), (9, 25), (10, 10)],
-                color = "blue",
-                label = "blue line")
-    line3 = Line(values = list((x,x**2) for x in range(11)),
-                color = "red",
-                label = "y = x squared")
-    example = Axis( [line1, line2, line3],
-                    title = "Example Chart",
-                    description = "Fig 1 : Example chart")
-    example.auto_x()
-    example.auto_y()
-    example.to_file("test.svg")
-
-![Test image](https://raw.githubusercontent.com/bernie-skipole/minilineplot/main/test.svg)
 
 

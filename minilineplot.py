@@ -615,21 +615,21 @@ class Axis:
 
 if __name__ == "__main__":
 
-    # Example plot
+    # Example plots
 
     line1 = Line(values = [(0,15), (2,20), (4, 50), (6, 75), (10, 60)],
-                color = "green",
-                label = "green line")
+                 color = "green",
+                 label = "green line")
 
     line2 = Line(values = [(0,95), (2,80), (5, 60), (7, 55), (8, 35), (9, 25), (10, 10)],
-                color = "blue",
-                label = "blue line")
+                 color = "blue",
+                 label = "blue line")
 
     line3 = Line(values = list((x,x**2) for x in range(11)),
-                color = "red",
-                label = "y = x squared")
+                 color = "red",
+                 label = "y = x squared")
 
-    example1 = Axis( [line1, line2, line3],
+    example1 = Axis([line1, line2, line3],
                     title = "Example Chart",
                     description = "Fig 1 : Example chart")
     example1.auto_x()
@@ -641,21 +641,28 @@ if __name__ == "__main__":
     import random
     # use random y values
 
-    line4  = Line(values = [],
-                color = "black")
+    # simulate measurements every 5 minutes for previous 50 hours
+    points = []
     t = round(time.time())
-    for x in range(t - 180000, t+300, 300): # simulate samples every 5 minutes for 50 hours
-        line4.values.append((x, random.randint(5, 25)))
+    for x in range(t - 180000, t+300, 300):
+        points.append((x, random.randint(5, 25)))
 
-    example2 = Axis( [line4], title = "Example Time Axis Chart")
+    line4  = Line(values = points,
+                  color = "black")
+
+    # get last time point to put in the description
+    latest = time.localtime(points[-1][0])
+
+    example2 = Axis( [line4],
+                     title = "Example Time Axis Chart",
+                     description = f"Values to : {time.strftime('%a %d %b %Y, %I:%M%p', latest)}",
+                     ymin = 0.0,
+                     ymax = 30.0,
+                     yintervals = 6
+                   )
+
+    # auto set time axis
     example2.auto_time_x(hourspan=1)
-    example2.ymin = 0.0
-    example2.ymax = 30.0
-    example2.yintervals = 6
-
-    latest = time.localtime(line4.values[-1][0])
-    example2.description = f"Values to : {time.strftime('%a %d %b %Y, %I:%M%p', latest)}"
-
     print("Creating file test2.svg")
     example2.to_file("test2.svg")
 
@@ -663,25 +670,25 @@ if __name__ == "__main__":
     print("Creating file test3.svg")
     example2.to_file("test3.svg")
 
-    example2.auto_time_x(hourspan=4)
+    example2.auto_time_x(hourspan=8)
     print("Creating file test4.svg")
     example2.to_file("test4.svg")
 
-    example2.auto_time_x(hourspan=8)
+    example2.auto_time_x(hourspan=16)
     print("Creating file test5.svg")
     example2.to_file("test5.svg")
 
-    example2.auto_time_x(hourspan=16)
+    example3 = Axis([line1],
+                    title = "Example Month Chart",
+                    description = "Fig 2 : Example chart",
+                    imagewidth = 1000,
+                    xmin = 0,
+                    xmax = 11,
+                    xstrings = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                    )
+    example3.auto_y()
     print("Creating file test6.svg")
-    example2.to_file("test6.svg")
-
-    example2.auto_time_x(hourspan=32)
-    print("Creating file test7.svg")
-    example2.to_file("test7.svg")
-
-    example2.auto_time_x(hourspan=48)
-    print("Creating file test8.svg")
-    example2.to_file("test8.svg")
+    example3.to_file("test6.svg")
 
     print("Done")
 
